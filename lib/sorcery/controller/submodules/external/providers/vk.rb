@@ -34,8 +34,8 @@ module Sorcery
                               :site,
                               :user_info_path,
                               :scope,
-                              :user_info_mapping,
-                              :display
+                              :user_info_mapping
+                              #:display
                 attr_reader   :access_token
 
                 include Protocols::Oauth2
@@ -46,9 +46,9 @@ module Sorcery
                   @token_path     = "access_token"
                   @scope          = "notify,friends"
                   @user_info_mapping = {}
-                  @display        = "page"
-                  @mode           = :query
-                  @parse          = :query
+                  #@display        = "page"
+                  #@mode           = :query
+                  #@parse          = :query
                   @param_name     = "code"
                   @fields = ['uid', 'first_name', 'last_name', 'nickname', 'domain', 'sex', 'city', 'country', 'timezone', 'photo', 'photo_big']
                 end
@@ -57,7 +57,7 @@ module Sorcery
                   user_hash = {}
                   response = @access_token.get("https://api.vk.com/method/getProfiles?uid=#{@access_token['user_id']}&fields=#{@fields.join(',')}&access_token=#{@access_token.token}")
                   user_hash[:user_info] = JSON.parse(response.body)['response'][0]
-                  user_hash[:uid] = user_hash[:user_info]['uid']
+                  user_hash[:uid] = user_hash[:user_info]['uid'].to_i
                   user_hash
                 end
 
