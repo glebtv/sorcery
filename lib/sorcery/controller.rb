@@ -33,6 +33,7 @@ module Sorcery
         if user
           return_to_url = session[:return_to_url]
           #reset_session # protect from session fixation attacks
+          session.delete(:user_id)
           session[:return_to_url] = return_to_url
           auto_login(user)
           after_login!(user, credentials)
@@ -48,6 +49,7 @@ module Sorcery
         if logged_in?
           before_logout!(current_user)
           #reset_session
+          session.delete(:user_id)
           after_logout!
           @current_user = nil
         end
