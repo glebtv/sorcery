@@ -32,7 +32,7 @@ module Sorcery
         user = user_class.authenticate(*credentials)
         if user
           return_to_url = session[:return_to_url]
-          reset_session # protect from session fixation attacks
+          #reset_session # protect from session fixation attacks
           session[:return_to_url] = return_to_url
           auto_login(user)
           after_login!(user, credentials)
@@ -47,7 +47,7 @@ module Sorcery
       def logout
         if logged_in?
           before_logout!(current_user)
-          reset_session
+          #reset_session
           after_logout!
           @current_user = nil
         end
