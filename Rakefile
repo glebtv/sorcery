@@ -25,9 +25,6 @@ Jeweler::Tasks.new do |gem|
   # and development dependencies are only needed for development (ie running rake tasks, tests, etc)
   #  gem.add_runtime_dependency 'jabber4r', '> 0.1'
   #  gem.add_development_dependency 'rspec', '> 1.2.3'
-  gem.add_runtime_dependency 'bcrypt-ruby', '~> 3.0.0'
-  gem.add_runtime_dependency 'oauth', '~> 0.4.4'
-  gem.add_runtime_dependency 'oauth2', '~> 0.5.1'
 end
 Jeweler::RubygemsDotOrgTasks.new
 
@@ -46,12 +43,14 @@ task :default => :all_sorcery_specs
 
 desc "Run all sorcery specs"
 task :all_sorcery_specs do
+  # we need to be empty, otherwise bundler will use parent bundler.
+  env = {
+    'BUNDLE_GEMFILE' => nil,
+    'GEM_HOME'       => nil
+  }
   Dir['spec/**/Rakefile'].each do |rakefile|
     directory_name = File.dirname(rakefile)
-    sh <<-CMD
-      cd #{directory_name}
-      bundle exec rake
-    CMD
+    system(env, "cd #{directory_name} && bundle && bundle exec rake")
   end
 end
 
