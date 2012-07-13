@@ -3,7 +3,7 @@ source :rubygems
 # Example:
 #   gem "activesupport", ">= 2.3.5"
 gem 'oauth', "~> 0.4.4"
-gem 'oauth2', "~> 0.5.1"
+gem 'oauth2', "~> 0.6.0"
 gem 'bcrypt-ruby', "~> 3.0.0"
 
 # Add dependencies to develop your gem here.
@@ -20,7 +20,7 @@ group :development do
   gem "jeweler", "~> 1.8.3"
   gem 'simplecov', '>= 0.3.8', :require => false # Will install simplecov-html as a dependency
   gem 'timecop'
-	gem 'capybara'
-	gem 'mongo_mapper'
-	gem 'mongoid', "~> 2.4.4"
+  gem 'capybara'
+  gem 'mongo_mapper'
+  gem 'mongoid', "~> 2.4.4"
 end

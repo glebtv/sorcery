@@ -33,6 +33,14 @@ module Sorcery
           # after authentication the user is redirected to the callback defined in the provider config
           def login_at(provider, args = {})
             @provider = Config.send(provider)
+            if @provider.callback_url.present? && @provider.callback_url[0] == '/'
+              uri = URI.parse(request.url.gsub(/\?.*$/,''))
+              uri.path = ''
+              uri.query = nil
+              uri.scheme = 'https' if(request.env['HTTP_X_FORWARDED_PROTO'] == 'https')
+              host = uri.to_s
+              @provider.callback_url = "#{host}#{@provider.callback_url}"
+            end
             if @provider.has_callback?
               redirect_to @provider.login_url(params,session)
             else
@@ -51,6 +59,7 @@ module Sorcery
               # session[:return_to_url] = return_to_url
               
               auto_login(user)
+              after_login!(user)
               user
             end
           end
@@ -59,6 +68,41 @@ module Sorcery
           def access_token(provider)
             @provider = Config.send(provider)
             @provider.access_token
+          end
+
+          # If user is logged, he can add all available providers into his account
+          def add_provider_to_user(provider)
+            provider_name = provider.to_sym
+            provider = Config.send(provider_name)
+            user_hash = provider.get_user_hash
+            config = user_class.sorcery_config
+
+            user = current_user.send(config.authentications_class.to_s.downcase.pluralize).build(config.provider_uid_attribute_name => user_hash[:uid], config.provider_attribute_name => provider_name.to_s)
+            user.save(:validate => false)
+
+            return user
+          end
+
+          # Initialize new user from provider informations.
+          # If a provider doesn't give required informations or username/email is already taken,
+          # we store provider/user infos into a session and can be rendered into registration form
+          def create_and_validate_from(provider)
+            provider = provider.to_sym
+            @provider = Config.send(provider)
+            @user_hash = @provider.get_user_hash
+            config = user_class.sorcery_config
+
+            attrs = user_attrs(@provider.user_info_mapping, @user_hash)
+
+            user = user_class.new(attrs)
+            user.send(config.authentications_class.to_s.downcase.pluralize).build(config.provider_uid_attribute_name => @user_hash[:uid], config.provider_attribute_name => provider)
+
+            session[:incomplete_user] = {
+              :provider => {config.provider_uid_attribute_name => @user_hash[:uid], config.provider_attribute_name => provider},
+              :user_hash => attrs
+            } unless user.save
+
+            return user
           end
           
           # this method automatically creates a new user from the data in the external user hash.
@@ -82,15 +126,9 @@ module Sorcery
             @provider = Config.send(provider)
             @user_hash = @provider.get_user_hash
             config = user_class.sorcery_config
-            attrs = {}
-            @provider.user_info_mapping.each do |k,v|
-              if (varr = v.split("/")).size > 1
-                attribute_value = varr.inject(@user_hash[:user_info]) {|hsh,v| hsh[v] } rescue nil
-                attribute_value.nil? ? attrs : attrs.merge!(k => attribute_value)
-              else
-                attrs.merge!(k => @user_hash[:user_info][v])
-              end
-            end
+
+            attrs = user_attrs(@provider.user_info_mapping, @user_hash)
+
             user_class.transaction do
               @user = user_class.new()
               attrs.each do |k,v|
@@ -106,7 +144,19 @@ module Sorcery
             end
             @user
           end
-          
+
+          def user_attrs(user_info_mapping, user_hash)
+            attrs = {}
+            user_info_mapping.each do |k,v|
+              if (varr = v.split("/")).size > 1
+                attribute_value = varr.inject(user_hash[:user_info]) {|hash, value| hash[value]} rescue nil
+                attribute_value.nil? ? attrs : attrs.merge!(k => attribute_value)
+              else
+                attrs.merge!(k => user_hash[:user_info][v])
+              end
+            end
+            return attrs
+          end
         end
       end
     end
