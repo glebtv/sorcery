@@ -21,7 +21,7 @@ module Sorcery
       # If all attempts to auto-login fail, the failure callback will be called.
       def require_login
         if !logged_in?
-          session[:return_to_url] = request.url if Config.save_return_to_url
+          session[:return_to_url] = request.url if Config.save_return_to_url && request.get?
           self.send(Config.not_authenticated_action)
         end
       end
@@ -112,7 +112,10 @@ module Sorcery
       end
 
       def login_from_session
-        @current_user = (user_class.find_by_id(session[:user_id]) if session[:user_id]) || false
+        @current_user = (user_class.find(session[:user_id]) if session[:user_id]) || false
+      rescue => exception
+        return false if defined?(Mongoid) and exception.is_a?(Mongoid::Errors::DocumentNotFound)
+        raise exception
       end
 
       def after_login!(user, credentials = [])

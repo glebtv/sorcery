@@ -3,12 +3,13 @@ source :rubygems
 # Example:
 #   gem "activesupport", ">= 2.3.5"
 gem 'oauth', "~> 0.4.4"
-gem 'oauth2', "~> 0.6.0"
+gem 'oauth2', "~> 0.7.1"
 gem 'bcrypt-ruby', "~> 3.0.0"
 
 # Add dependencies to develop your gem here.
 # Include everything needed to run rake, tests, features, etc.
 group :development do
+  gem 'abstract', '>= 1.0.0'
   gem "rails", ">= 3.0.0"
   gem 'json', ">= 1.5.1"
   gem "rspec", "~> 2.5.0"
