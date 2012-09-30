@@ -45,7 +45,7 @@ module Sorcery
           end
 
           def find_by_id(id)
-            find(id)
+            find(id.to_s)
           rescue ::Mongoid::Errors::DocumentNotFound
             nil
           end
